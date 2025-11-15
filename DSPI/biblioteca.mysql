@@ -1,0 +1,82 @@
+CREATE DATABASE IF NOT EXISTS appLivroTeste;
+USE appLivroTeste;
+
+CREATE TABLE IF NOT EXISTS usuarios(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ra INT(30) NOT NULL,
+    nome VARCHAR(50) NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    data_nascimento DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS livros(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    autor VARCHAR(100) NOT NULL,
+    editora VARCHAR(100),
+    ano_publicacao INT,
+    genero VARCHAR(50),
+    tipo ENUM('LITERARIO', 'TECNICO') NOT NULL,
+    status ENUM('DISPONIVEL', 'INDISPONIVEL') DEFAULT 'DISPONIVEL',
+    nota_media DECIMAL(3, 2) DEFAULT 0.00,
+    descricao TEXT,
+    capa_url VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sagas(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    total_livros INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS livro_saga(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    livro_id INT NOT NULL,
+    saga_id INT NOT NULL,
+    ordem_na_saga INT NOT NULL,
+    FOREIGN KEY (livro_id) REFERENCES livros(id),
+    FOREIGN KEY (saga_id) REFERENCES sagas(id),
+    UNIQUE KEY unique_livro_saga (livro_id, saga_id)
+);
+
+CREATE TABLE IF NOT EXISTS avaliacoes(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    livro_id INT NOT NULL,
+    nota DECIMAL(3, 2) NOT NULL CHECK (nota >= 0 AND nota <= 5),
+    comentario TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY (livro_id) REFERENCES livros(id),
+    UNIQUE KEY unique_avaliacao (usuario_id, livro_id)
+);
+
+CREATE TABLE IF NOT EXISTS consultas_ia (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    livro_id INT NOT NULL,
+    termo_consultado VARCHAR(500) NOT NULL,
+    explicacao_ia TEXT NOT NULL,
+    tipo ENUM('SIMPLIFICADA', 'COMPARACAO') DEFAULT 'SIMPLIFICADA',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY (livro_id) REFERENCES livros(id)
+);
+
+CREATE TABLE IF NOT EXISTS historico_leitura(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    livro_id INT NOT NULL,
+    status ENUM('LENDO', 'LIDO', 'QUERO_LER', 'ABANDONADO') NOT NULL,
+    data_inicio DATE,
+    data_fim DATE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY (livro_id) REFERENCES livros(id),
+    UNIQUE KEY unique_historico (usuario_id, livro_id)
+);
